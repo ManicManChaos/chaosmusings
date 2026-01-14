@@ -1,0 +1,27 @@
+body {
+  margin: 0;
+  background: #0B0F0D;
+  color: #F2E8D5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+main {
+  display: flex;
+}
+
+aside {
+  width: 64px;
+  background: #111;
+}
+
+section {
+  padding: 1rem;
+}
+
+.weave {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,192,203,.25), transparent);
+  pointer-events: none;
+  z-index: 50;
+}
