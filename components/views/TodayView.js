@@ -1,1 +1,0 @@
-export default function TodayView(){return <section><h2>ASSESSMENT</h2><textarea/><h2>SUMMATION</h2><textarea/></section>}
