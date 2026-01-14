@@ -1,25 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Assessment from "../components/sections/Assessment";
-import ContextBlock from "../components/sections/ContextBlock";
-import SummationBlock from "../components/sections/SummationBlock";
-import Weave from "../components/Weave";
+import Sidebar from "../components/sidebar/Sidebar";
+import AssessmentBlock from "../components/hub/AssessmentBlock";
+import IntakeBlock from "../components/hub/IntakeBlock";
+import ContextFeed from "../components/hub/ContextFeed";
+import SummationPreview from "../components/hub/SummationPreview";
 
-export default function Page() {
-  const [weave, setWeave] = useState(false);
-
+export default function Home() {
   return (
-    <main>
-      {weave && <Weave />}
-      <Sidebar triggerWeave={() => setWeave(true)} />
-
-      <section>
-        <Assessment />
-        <ContextBlock />
-        <SummationBlock />
-      </section>
-    </main>
+    <div className="shell">
+      <main className="main">
+        <AssessmentBlock />
+        <IntakeBlock />
+        <ContextFeed />
+        <SummationPreview />
+      </main>
+      <Sidebar />
+    </div>
   );
 }
