@@ -1,47 +1,46 @@
-
-// scripts/validate-assets.mjs
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..");
+// Adjust ONLY if your repo root changes.
+const ROOT = process.cwd();
+const PUBLIC_DIR = path.join(ROOT, "public");
+
+// Add every required file you want enforced at build time.
+const REQUIRED_PUBLIC_PATHS = [
+  // ICONS (validator contract)
+  "/icons/eye.svg",
+  "/icons/moments.svg",
+  "/icons/roidboy.svg",
+  "/icons/ps.svg",
+  "/icons/summation.svg",
+  "/icons/assessment.svg",
+  "/icons/intake.svg",
+  "/icons/library.svg",
+  "/icons/directory.svg",
+  "/icons/year.svg",
+
+  // Opening flow covers (optional to enforce; remove if you don’t want builds blocked)
+  "/assets/flow/01-center.png",
+  "/assets/flow/02-github.png",
+  "/assets/flow/03-arrival.png",
+];
 
 function fail(msg) {
   console.error(`\n❌ Asset validation failed:\n- ${msg}\n`);
   process.exit(1);
 }
 
-function assertPublicFileExists(publicPath) {
-  // publicPath must start with "/"
-  const diskPath = path.join(repoRoot, "public", publicPath.replace(/^\//, ""));
-  if (!fs.existsSync(diskPath)) {
-    fail(`Missing file on disk for manifest path: ${publicPath}\nExpected: ${diskPath}`);
+function existsPublic(p) {
+  const diskPath = path.join(PUBLIC_DIR, p.replace(/^\//, ""));
+  return fs.existsSync(diskPath);
+}
+
+for (const p of REQUIRED_PUBLIC_PATHS) {
+  if (!p.startsWith("/")) fail(`Public path must start with "/": ${p}`);
+  if (!existsPublic(p)) {
+    const expected = path.join(PUBLIC_DIR, p.replace(/^\//, ""));
+    fail(`Missing file on disk for public path: ${p}\n  Expected: ${expected}`);
   }
 }
 
-async function main() {
-  const assetsModulePath = path.join(repoRoot, "lib", "assets.js");
-  if (!fs.existsSync(assetsModulePath)) fail("Missing lib/assets.js");
-
-  const mod = await import(pathToFileUrl(assetsModulePath).href);
-
-  const ICONS = mod.ICONS || {};
-  for (const [key, p] of Object.entries(ICONS)) {
-    if (typeof p !== "string") fail(`ICONS.${key} must be a string`);
-    if (!p.startsWith("/")) fail(`Manifest path must start with "/": ${p}`);
-    if (!p.startsWith("/icons/")) fail(`Manifest path must live under /icons/: ${p}`);
-    assertPublicFileExists(p);
-  }
-
-  console.log("✅ Asset validation passed.");
-}
-
-function pathToFileUrl(p) {
-  const u = new URL("file://");
-  u.pathname = p;
-  return u;
-}
-
-main().catch((e) => fail(e?.stack || String(e)));
+console.log("✅ Asset validation passed.");
