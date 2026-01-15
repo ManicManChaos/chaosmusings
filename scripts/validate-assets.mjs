@@ -1,3 +1,4 @@
+
 // scripts/validate-assets.mjs
 import fs from "node:fs";
 import path from "node:path";
@@ -5,62 +6,42 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const ROOT = path.resolve(__dirname, "..");
-const PUBLIC_DIR = path.join(ROOT, "public");
-
-// Adjust this if your assets file is somewhere else
-const ASSETS_FILE = path.join(ROOT, "lib", "assets.js");
+const repoRoot = path.resolve(__dirname, "..");
 
 function fail(msg) {
   console.error(`\n❌ Asset validation failed:\n- ${msg}\n`);
   process.exit(1);
 }
 
-function ok(msg) {
-  console.log(`✅ ${msg}`);
-}
-
-function existsOnDisk(publicPath) {
-  // publicPath must look like "/assets/...."
-  const diskPath = path.join(PUBLIC_DIR, publicPath.replace(/^\//, ""));
-  return { diskPath, exists: fs.existsSync(diskPath) };
-}
-
-function extractPaths(js) {
-  // grabs "/something.ext" strings
-  const re = /["'`](\/[^"'`]+?\.(?:svg|png|jpg|jpeg|webp|gif|ico))["'`]/g;
-  const out = new Set();
-  let m;
-  while ((m = re.exec(js))) out.add(m[1]);
-  return [...out];
-}
-
-if (!fs.existsSync(ASSETS_FILE)) fail(`Missing assets file: ${ASSETS_FILE}`);
-if (!fs.existsSync(PUBLIC_DIR)) fail(`Missing public folder: ${PUBLIC_DIR}`);
-
-const js = fs.readFileSync(ASSETS_FILE, "utf8");
-const paths = extractPaths(js);
-
-if (!paths.length) {
-  fail(
-    `No asset paths found in lib/assets.js. Expect strings like "/assets/..." or "/icons/...".`
-  );
-}
-
-let missing = 0;
-
-for (const p of paths) {
-  if (!p.startsWith("/")) fail(`Manifest path must start with "/": ${p}`);
-
-  const { diskPath, exists } = existsOnDisk(p);
-  if (!exists) {
-    console.error(`❌ Missing file for path: ${p}\n   Expected: ${diskPath}`);
-    missing++;
+function assertPublicFileExists(publicPath) {
+  // publicPath must start with "/"
+  const diskPath = path.join(repoRoot, "public", publicPath.replace(/^\//, ""));
+  if (!fs.existsSync(diskPath)) {
+    fail(`Missing file on disk for manifest path: ${publicPath}\nExpected: ${diskPath}`);
   }
 }
 
-if (missing) fail(`${missing} missing asset file(s).`);
+async function main() {
+  const assetsModulePath = path.join(repoRoot, "lib", "assets.js");
+  if (!fs.existsSync(assetsModulePath)) fail("Missing lib/assets.js");
 
-ok(`All asset paths exist (${paths.length} checked).`);
-process.exit(0);
+  const mod = await import(pathToFileUrl(assetsModulePath).href);
+
+  const ICONS = mod.ICONS || {};
+  for (const [key, p] of Object.entries(ICONS)) {
+    if (typeof p !== "string") fail(`ICONS.${key} must be a string`);
+    if (!p.startsWith("/")) fail(`Manifest path must start with "/": ${p}`);
+    if (!p.startsWith("/icons/")) fail(`Manifest path must live under /icons/: ${p}`);
+    assertPublicFileExists(p);
+  }
+
+  console.log("✅ Asset validation passed.");
+}
+
+function pathToFileUrl(p) {
+  const u = new URL("file://");
+  u.pathname = p;
+  return u;
+}
+
+main().catch((e) => fail(e?.stack || String(e)));
