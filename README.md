@@ -23,3 +23,6 @@ Rules:
 - All icon/image paths must be declared in `lib/assets.js`.
 - No components should hardcode `/icons/...` paths.
 - Build runs validation automatically.
+
+
+love wins
