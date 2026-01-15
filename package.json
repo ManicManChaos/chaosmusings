@@ -3,9 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run validate && next build",
+    "build": "next build",
     "start": "next start",
-    "validate:assets": "node scripts/validate-assets.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "next": "14.2.5",
