@@ -21,7 +21,6 @@ export default function OpeningBook({ onDone }) {
   const [step, setStep] = useState(0);
   const [weaving, setWeaving] = useState(false);
 
-  // auto-advance from auth -> arrival (pause), then finish
   useEffect(() => {
     if (step !== 1) return;
     const t = window.setTimeout(() => {
